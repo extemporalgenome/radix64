@@ -11,13 +11,13 @@ var enc64, dec64;
 		table[ord.charCodeAt(i)] = i;
 
 	enc64 = function(n, len) {
-		var out = []; 
+		var out = ""; 
 		while(n > 0 || len > 0) {
-			out.unshift(ord[n & 63]);
+			out = ord[n & 63] + out;
 			n >>= 6;
 			len--;
 		}
-		return out.join("");
+		return out;
 	};
 	dec64 = function(s) {
 		var c, out = 0; 
