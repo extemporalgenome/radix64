@@ -4,7 +4,10 @@
 
 package radix64
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 const (
 	enc = 1 << iota
@@ -20,6 +23,7 @@ var equivs = []struct {
 	{enc | dec, 0, "0"},
 	{enc | dec, 63, "_"},
 	{enc | dec, 64, "10"},
+	{enc | dec, 1057222719, "_0_0_"},
 	// Padding
 	{enc | dec, 0, "000"},
 	{enc | dec, 4095, "00__"},
@@ -74,5 +78,56 @@ func TestCost(t *testing.T) {
 		if b, r := Cost(c.n); b != c.b || r != c.r {
 			t.Errorf("Expected cost of %d to be (%d, %d); got (%d, %d)\n", c.n, c.b, c.r, b, r)
 		}
+	}
+}
+
+func BenchmarkEncSmall(b *testing.B) {
+	buf := make([]byte, 1)
+	for i := 0; i < b.N; i++ {
+		Encode(63, buf)
+	}
+}
+
+func BenchmarkEncMedium(b *testing.B) {
+	buf := make([]byte, 5)
+	n := uint64(math.Pow(64, 5)) - 1
+	for i := 0; i < b.N; i++ {
+		Encode(n, buf)
+	}
+}
+
+func BenchmarkEncLarge(b *testing.B) {
+	buf := make([]byte, 10)
+	n := uint64(math.Pow(64, 10)) - 1
+	for i := 0; i < b.N; i++ {
+		Encode(n, buf)
+	}
+}
+
+func BenchmarkEncPadding(b *testing.B) {
+	buf := make([]byte, 10)
+	for i := 0; i < b.N; i++ {
+		Encode(0, buf)
+	}
+}
+
+func BenchmarkDecSmall(b *testing.B) {
+	buf := []byte("_")
+	for i := 0; i < b.N; i++ {
+		Decode(buf)
+	}
+}
+
+func BenchmarkDecMedium(b *testing.B) {
+	buf := []byte("_____")
+	for i := 0; i < b.N; i++ {
+		Decode(buf)
+	}
+}
+
+func BenchmarkDecLarge(b *testing.B) {
+	buf := []byte("__________")
+	for i := 0; i < b.N; i++ {
+		Decode(buf)
 	}
 }
