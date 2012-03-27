@@ -3,11 +3,13 @@
 	<head>
 		<title>radix64 demonstration</title>
 		<style>
-			label { width: 175px; float: left; clear: both }
-			label input { width: 100px; float: right }
+			label { width: 200px; float: left; clear: both }
+			label input { float: right; width: 100px }
 			button { float: left; margin-left: 10px }
 			label input, button { position: relative; bottom: 5px }
+			input[readonly] { border-color: transparent }
 			#width { width: 50px }
+			br { clear: both }
 		</style>
 		<script src="radix64.js"></script>
 		<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
@@ -24,22 +26,68 @@
 					this.value = v;
 				});
 
+				$('#encoded').change(function() {
+					this.value = this.value.replace(/[^0-9A-Za-z_-]+/, '');
+				});
+
 				$('#decoded').val(Math.round(Math.random() * 65535));
 
 				$('#encode').click(function() {
 					$('#encoded').val(enc64($('#decoded').val(), $('#width').val()));
-				});
+				}).click();
 
 				$('#decode').click(function() {
 					$('#decoded').val(dec64($('#encoded').val()));
+				});
+
+				var bench = function(config, func) {
+					$('#benchresult').val("processing...");
+					var iters = parseInt($('#iterations').val());
+					var start = new Date();
+					var len = func(config, iters);
+					var duration = (new Date() - start) * 1e6;
+					var op = Math.round(duration / iters);
+					var ch = Math.round(op / len);
+					$('#benchresult').text(op + " ns/op; " + ch + " ns per encoded digit");
+				};
+
+				$('#benchenc').click(function() {
+					bench({
+						v: parseInt($('#decoded').val()),
+						w: parseInt($('#width').val())
+					}, function(config, iters) {
+						var v = config.v, w = config.w;
+						for(var i = 0; i < iters; i++)
+							enc64(v, w);
+						return enc64(v, w).length;
+					});
+				});
+
+				$('#benchdec').click(function() {
+					bench({
+						v: $('#encoded').val(),
+					}, function(config, iters) {
+						var v = config.v;
+						for(var i = 0; i < iters; i++)
+							dec64(v);
+						return v.length;
+					});
 				});
 			});
 		</script>
 	</head>
 	<body>
-		<label>Decoded: <input id=decoded type=number min=0 step=1 /></label><button id="encode">Encode</button><br />
-		<label>Width: <input id=width type=number min=0 max=10 step=1 value=0 /></label><br />
-		<label>Encoded: <input id=encoded /></label><button id="decode">Decode</button><br />
-		<span id="error"></span>
+		<fieldset><legend>Values</legend>
+			<label>Decoded: <input id=decoded type=number min=0 step=1 /></label><button id="encode">Encode</button><br />
+			<label>Width: <input id=width type=number min=0 max=10 step=1 value=0 /></label><br />
+			<label>Encoded: <input id=encoded /></label><button id="decode">Decode</button><br />
+		</fieldset>
+		<fieldset><legend>Benchmark</legend>
+			<p>(Benchmarking will use the above encode/decode values)</p>
+			<label>Iterations: <input id=iterations type=number min=1 step=1 value=100000 /></label>
+			<button id="benchenc">Encode</button>
+			<button id="benchdec">Decode</button><br />
+			Result: <span id=benchresult>n/a</span>
+		</fieldset>
 	</body>
 </html>
