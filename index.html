@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+	<head>
+		<title>radix64 demonstration</title>
+		<style>
+			label { width: 175px; float: left; clear: both }
+			label input { width: 100px; float: right }
+			button { float: left; margin-left: 10px }
+			label input, button { position: relative; bottom: 5px }
+			#width { width: 50px }
+		</style>
+		<script src="radix64.js"></script>
+		<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+		<script>
+			$(function() {
+				$(':input[type=number]').change(function() {
+					var v = parseFloat(this.value);
+					var min = parseFloat(this.min);
+					var max = parseFloat(this.max);
+					var step = parseFloat(this.step);
+					if(v < min) v = min;
+					else if (v > max) v = max;
+					else v = Math.floor((v - min) / step) * step + min;
+					this.value = v;
+				});
+
+				$('#decoded').val(Math.round(Math.random() * 65535));
+
+				$('#encode').click(function() {
+					$('#encoded').val(enc64($('#decoded').val(), $('#width').val()));
+				});
+
+				$('#decode').click(function() {
+					$('#decoded').val(dec64($('#encoded').val()));
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<label>Decoded: <input id=decoded type=number min=0 step=1 /></label><button id="encode">Encode</button><br />
+		<label>Width: <input id=width type=number min=0 max=10 step=1 value=0 /></label><br />
+		<label>Encoded: <input id=encoded /></label><button id="decode">Decode</button><br />
+		<span id="error"></span>
+	</body>
+</html>
